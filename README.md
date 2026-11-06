@@ -10,5 +10,5 @@ Phone-friendly web code editor: HTML, CSS, JS, JSON, TS, TSX, Python, ZIP websit
 
 ## Zaroori baatein
 - **API key kabhi code ya repo mein mat likho.** App mein koi key nahi hai; jo key aap settings mein daalte ho woh sirf aapke apne browser mein save hoti hai.
-- Update karne par `sw.js` mein `scs-v5` ko `scs-v6` karo, tab purana cached version hat jayega.
+- Update karne par `sw.js` mein `sw.js` ka cache version har update par badhta hai; is build mein `scs-v6` hai, tab purana cached version hat jayega.
 - Python (Pyodide), TS/TSX (Babel) aur fonts internet se aate hain; pehli baar chalane ke baad browser unhe cache kar leta hai.
