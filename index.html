@@ -261,7 +261,10 @@ async function addFiles(files,split){
  if(bad.length)msg+=' · '+bad.length+' skip ('+bad.slice(0,2).join(', ')+(bad.length>2?'…':'')+')';
  toast(msg)}
 $('eAdd').onclick=()=>$('fAny').click();
-$('fAny').onchange=async e=>{const fl=[...e.target.files];try{await addFiles(fl,false)}catch(x){toast('File nahi khuli: '+x.message)}finally{e.target.value=''}};
+async function addToCur(fl){const f=fl[0];if(!f)return;const x=f.name.includes('.')?f.name.split('.').pop().toLowerCase():'';
+ if(/^(zip|apk)$/.test(x)||IMGX.test(x)){toast('Is tab mein sirf code file aati hai');return}
+ setTab(cur,await f.text());toast(fl.length>1?'Sirf pehli file aayi — har file ke liye alag tab (+) banao':f.name+' is tab mein aa gayi')}
+$('fAny').onchange=async e=>{const fl=[...e.target.files];if(XT[cur]){try{await addToCur(fl)}catch(x){toast('File nahi khuli: '+x.message)}finally{e.target.value=''}return}try{await addFiles(fl,false)}catch(x){toast('File nahi khuli: '+x.message)}finally{e.target.value=''}};
 $('hAdd').onclick=()=>$('fProj').click();
 $('fProj').onchange=async e=>{const fl=[...e.target.files];try{await addFiles(fl,true)}catch(x){toast('File nahi khuli: '+x.message)}finally{e.target.value=''}};
 const ERRF=function(){try{localStorage.getItem('_')}catch(e){['localStorage','sessionStorage'].forEach(function(n){var m={};try{Object.defineProperty(window,n,{configurable:true,value:{getItem:function(k){return k in m?m[k]:null},setItem:function(k,v){m[k]=String(v)},removeItem:function(k){delete m[k]},clear:function(){m={}},key:function(i){return Object.keys(m)[i]||null},get length(){return Object.keys(m).length}}})}catch(x){}})}
@@ -455,7 +458,11 @@ function splitHtml(tx){const d=new DOMParser().parseFromString(tx,'text/html'),c
  d.querySelectorAll('script:not([src])').forEach(e=>{const ty=(e.type||'').toLowerCase();if(/json/.test(ty))jn.push(e.textContent.trim());else if(!ty||/javascript|module/.test(ty))js.push(e.textContent.trim());else return;e.remove()});
  if(!css.length&&!js.length&&!jn.length)return null;
  return{html:/<html|<!doctype/i.test(tx)?'<!doctype html>\n'+d.documentElement.outerHTML:d.body.innerHTML.trim(),css:css.join('\n\n'),js:js.join('\n\n'),json:jn.join('\n\n')}}
-function smartPaste(s,force){const FZ=!!force&&force!=='auto',M={},add=(tb,tx)=>{if(!tx||!tx.trim())return;M[tb]=M[tb]!==undefined?M[tb]+'\n\n'+tx:tx};
+function smartPaste(s,force){
+ if(XT[cur]){const fe=[...s.matchAll(/```([\w+-]*)[^\n]*\n([\s\S]*?)```/g)],tx=fe.length?fe.map(m=>m[2].replace(/\n$/,'')).join('\n\n'):s.replace(/\s+$/,'');
+  if(!tx.trim()){toast('Paste karne layak code nahi mila');return}
+  setTab(cur,tx);toast('Paste ho gaya: '+XT[cur].n+' tab mein (galat lage to Undo ↶)');return}
+ const FZ=!!force&&force!=='auto',M={},add=(tb,tx)=>{if(!tx||!tx.trim())return;M[tb]=M[tb]!==undefined?M[tb]+'\n\n'+tx:tx};
  const fe=[...s.matchAll(/```([\w+-]*)[^\n]*\n([\s\S]*?)```/g)],parts=fe.length?fe.map(m=>[FZ?force:(LG[m[1].toLowerCase()]||detect(m[2])),m[2].replace(/\n$/,'')]):[[FZ?force:detect(s),s.replace(/\s+$/,'')]];
  parts.forEach(([tb,tx])=>{if(tb==='html'&&!FZ){const sp=splitHtml(tx);if(sp){add('html',sp.html);add('css',sp.css);add('js',sp.js);add('json',sp.json);return}}add(tb,tx)});
  const order=['html','css','js','json','ts','tsx','py'].filter(k=>M[k]!==undefined);if(!order.length){toast('Paste karne layak code nahi mila');return}
